@@ -1,43 +1,90 @@
-.app{
-  display: flex;
-  flex-direction: column;
-  border: 1px solid black;
-  border-radius: 5px;
-  width: fit-content;
-  padding:10px;
-  text-align: center;
-  gap:10px;
-  align-items: stretch;
-
-}
-
-html{
-  display: flex;
-  justify-content: center;
-}
-
-.form{
-  display: flex;
-  flex-direction: row;
-  gap:10px;
-}
-
-.todo-list{
-  padding:0;
+* {
+  padding: 0;
   margin: 0;
+  box-sizing: border-box;
+  font-family: Helvetica, sans-serif;
+}
+.app {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  list-style-type: none;
-  gap:10px;
+  align-items: center;
+}
+.form {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0 1rem 0;
 }
 
-.todo-list li{
-  display: flex;
-  justify-content: space-between;
+.form > button {
+  height: 2rem;
+  width: 4rem;
+  color: #f0f0f0;
+  background-color: #008cba;
+  border: none;
 }
-.todo-list li span{
+
+.todo-lists__container {
+  display: flex;
+  gap: 1rem;
+}
+.todo-list__container {
+  border: 1px black solid;
+  padding: 1rem;
+  min-width: 500px;
+  border-radius: 1rem;
+  height: 500px;
+  overflow-y: auto; /* Scrollable list */ 
+}
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.todo {
+  background-color: #e6e2d3;
+  padding: 5px;
+  display: flex;
+  gap: 3px;
+  height: 2.5rem;
+  border-radius: 5px;
+  align-items: center;
+  list-style-type: none;
+}
+.todo > span {
+  font-weight: 600;
+}
+.todo > input {
+  height: 25px;
+}
+.todo > button {
+  width: 40px;
+  height: 25px;
+  display: block;
+  cursor: pointer;
+  border: none;
+  color: white;
+}
+.todo > button > svg {
+  pointer-events: none; /* Needed to stop the event from using the svg as the target */
+  max-width: 100%;
+  max-height: 100%;
+  filter: invert(100%) sepia(0%) saturate(5219%) hue-rotate(231deg)
+    brightness(117%) contrast(88%); /* makes the color white - needed for svg*/
+}
+.todo > .edit-btn {
+  background-color: #008cba;
+}
+.todo > .delete-btn {
+  background-color: #c94c4c;
+}
+.todo > .status-btn {
+  background-color: #4caf50;
+}
+.todo > span,
+.todo > input {
   flex-grow: 1;
+}
+.todo > span {
   text-align: center;
 }
-
-
