@@ -41,7 +41,7 @@
             console.log("update id", id, "type of id:", typeof id);
             console.log("update newtodo", newTodo);
             return fetch("http://localhost:3000/todos/" + id, {
-                method: "PUT",
+                method: "PATCH",
                 body: JSON.stringify(newTodo),
                 headers: { "Content-Type": "application/json" },
     });
@@ -121,22 +121,43 @@
     const View = (() => {
         const todolistEl = document.querySelector(".todo-list");
         const submitBtnEl = document.querySelector(".submit-btn");
-        const todolistCompleteEl = document.querySelector(".todo-list-complete");
+        const todolistCompleteEl = document.querySelector(".complete-todo-list");
         const inputEl = document.querySelector(".input");
         let temp_text = '';
     
         const renderTodos = (todos) => {
             let todosTemplate = "";
-            todos.forEach((todo) => {
-                const liTemplate = `<li><span id="mayEdit" contenteditable="false" >${todo.content}</span><button class="delete-btn" id="${todo.id}">delete</button><button class="update-btn" id="${todo.id}" name="update-btn">update</button><button class="change-btn" id="${todo.id}">change</button></li>`;
-                const completTemplet = `<li><button class="change-button" id = "${todo.id}">change</button><button class="update-btn" id="${todo.id}"><span id="mayEdit" contenteditable="false" >${todo.content}</span><button class="delete-btn" id="${todo.id}">delete</button><button class="update-btn" id="${todo.id}" name="update-btn">update</button></li>`;
+            let completeList = "";
+            const todos_pending = todos.filter((todo) => {
+                return !todo.complete;
+            });
+            const todos_complete = todos.filter((todo)=> {return todo.complete;});
+            todos_pending.forEach((todo) => {
+                const liTemplate = `<li>
+                                        <span id="mayEdit">${todo.content}</span>
+                                        <button class="delete-btn" id="${todo.id}">delete</button>
+                                        <button class="update-btn" id="${todo.id}" name="update-btn">update</button>
+                                        <button class="change-btn" id="${todo.id}">change</button>
+                                    </li>`;
                 todosTemplate += liTemplate;
             });
             if (todos.length === 0) {
                 todosTemplate = "<h4>no task to display!</h4>";
             }
             todolistEl.innerHTML = todosTemplate;
+
+            todos_complete.forEach((one) => {
+                const liTemplate = `<li>
+                                    <button class="change-button" id = "${todo.id}">change</button>
+                                    <span id="cantEdit" contenteditable="false" >${todo.content}</span>
+                                    <button class="delete-btn" id="${todo.id}">delete</button>
+                                    <button class="update-btn" id="${todo.id}" name="update-btn">update</button>
+                                    </li>`;
+                completeList += liTemplate;
+            });
+            todolistCompleteEl.innerHTML = completeList;
         };
+
     
         const clearInput = () => {
             inputEl.value = "";
@@ -162,7 +183,7 @@
                     3. update view
                 */
                 const inputValue = view.inputEl.value;
-                model.createTodo({ content: inputValue }).then((data) => {
+                model.createTodo({ content: inputValue, complete_model: false }).then((data) => {
                     state.todos = [data, ...state.todos];
                     view.clearInput();
                 });
@@ -186,87 +207,95 @@
                 }
             });
         };
+
+        const handleDelete_complete = () => {
+            view.todolistCompleteEl.addEventListener("click", (event) => {
+                if (event.target.className === "delete-btn") {
+                    const id = event.target.id;
+                    console.log("id", typeof id);
+                    model.deleteTodo(+id).then((data) => {
+                        state.todos = state.todos.filter((todo) => todo.id !== +id);
+                    });
+                }
+            });
+        };
+
     
         const handleUpdate = () => {
             // get id
             // make content editable
             // update view
-    
+            
             // if click update btn
-            view.todolistEl.addEventListener("click", (event)=>{
-                const id = event.target.id;
-                const edit = document.querySelector('#mayEdit');
+            view.todolistEl.addEventListener("click", (event) =>{
                 if(event.target.className === "update-btn"){
-                    const temp = event.target.innerText;
-                    console.log("update id: " , id , typeof id);
-                    // if btn is content editable , change to cannot change
-                    // update info
-                    if(edit.contentEditable == "true"){
-                        edit.contentEditable = "false";
-    
-                        console.log("temp_text: ", temp_text);
-                        // update
-                        model.updateTodo(+id, temp_text).then((data)=>{
-                            console.log("data info: ", data);
-                            state.todos = state.todos.forEach((id, temp_text)=>{
-                                if(todo.id === id){
-                                    todo.value = temp_text;
-                                }
-                            });
-                        });
-    
-                        // after update, assign content to empty
-                        temp_text = '';
-                    }else{
-                        edit.contentEditable = "true";
-                    }
-                }
-                // console.log("new todos: ", model);
-                // if content is editable, then if input, update content
-                view.todolistEl.addEventListener("input", (event)=>{
-                    if(edit.contentEditable == "true"){
-                        temp_text = event.target.innerText;
-                    }
-                });  
-            });
+                    const id = event.target.id;
+                    const edit = event.target.parentNode;
+                    const checkflag = edit.getElementsByTagName('span')[0];
 
-            view.todolistCompleteEl.addEventListener("click", (event)=>{
-                const id = event.target.id;
-                const edit = document.querySelector('#mayEdit');
-                if(event.target.className === "update-btn"){
-                    const temp = event.target.innerText;
-                    console.log("update id: " , id , typeof id);
-                    // if btn is content editable , change to cannot change
-                    // update info
-                    if(edit.contentEditable == "true"){
-                        edit.contentEditable = "false";
-    
-                        console.log("temp_text: ", temp_text);
-                        // update
-                        model.updateTodo(+id, temp_text).then((data)=>{
-                            console.log("data info: ", data);
-                            state.todos = state.todos.forEach((id, temp_text)=>{
-                                if(todo.id === id){
-                                    todo.value = temp_text;
-                                }
-                            });
+                    console.log("id is: ", id);
+                    console.log("edit: ", edit);
+                    
+                    if (checkflag.contentEditable === "true") {
+                        checkflag.contentEditable = "false";
+                        model.updateTodo(+id, { content: checkflag.innerHTML }).then(() => {
                         });
-    
-                        // after update, assign content to empty
-                        temp_text = '';
+                      } else {
+                        checkflag.contentEditable = "true";
+                      }
+                }
+            });
+        };
+
+        const handleUpdate_complete = () => {
+            view.todolistCompleteEl.addEventListener("click", (event)=>{
+                if(event.target.className === "update-btn"){
+                    const checkflag = event.target.parentNode.getElementsByTagName('span')[0];
+                    if(checkflag.contentEditable === "true"){
+                        checkflag.contentEditable = "false";
+                        model.updateTodo(+id, {content: checkflag.innerHTML}).then(()=>{});
                     }else{
-                        edit.contentEditable = "true";
+                        checkflag.contentEditable = "true";
                     }
                 }
-                // console.log("new todos: ", model);
-                // if content is editable, then if input, update content
-                view.todolistCompleteEl.addEventListener("input", (event)=>{
-                    if(edit.contentEditable == "true"){
-                        temp_text = event.target.innerText;
+            })
+        }
+
+
+        const handleChange = () => {
+            console.log("in change function");
+            view.todolistEl.addEventListener("click", (event) => {
+                if(event.target.className === "change-button"){
+                    const id = event.target.id;
+                    const get_el = event.target.parentNode.getElementsByTagName('span')[0];
+                    console.log("in handle change function id: ", id);
+                    console.log("in handle change function, el:", get_el);
+                    if(event.target.complete_model==="false"){
+                        console.log("yes, change to do list to complete list");
+                        model.updateTodo(+id, {complete_model:true}).then((data)=>{
+                            state.todos = state.todos.map((todo)=> todo.id === data.id? data: todo);
+                        });
                     }
-                });  
+                    state.todos = [...state.todos];
+                }
             });
-    
+        };
+
+        const handleChange_complete = () => {
+            console.log("in complete change function");
+            view.todolistCompleteEl.addEventListener("click", (event) => {
+                if(event.target.className === "change-button"){
+                    const id = event.target.id;
+                    const get_el = event.target.parentNode.getElementsByTagName('span')[0];
+                    if(event.target.complete_model==="true"){
+                        console.log("yes, move to todo pending list");
+                        model.updateTodo(+id, {complete_model:false}).then((data)=>{
+                            state.todos = state.todos.map((todo)=> todo.id === data.id? data: todo);
+                        });
+                    }
+                    state.todos = [...state.todos];
+                }
+            })
         }
     
         const bootstrap = () => {
@@ -274,6 +303,10 @@
             handleSubmit();
             handleDelete();
             handleUpdate();
+            handleChange();
+            handleDelete_complete(),
+            handleUpdate_complete(),
+            handleChange_complete(),
             state.subscribe(() => {
                 view.renderTodos(state.todos);
             });
